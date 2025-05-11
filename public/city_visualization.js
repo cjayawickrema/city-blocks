@@ -1,673 +1,118 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// (nestedStructure definition remains the same)
-const nestedStructure = {
-    "name": "root",
-    "fullPath": "",
-    "childDirectories": [
-      {
-        "name": "pricing",
-        "fullPath": "pricing",
-        "childDirectories": [
-          {
-            "name": "price-berg",
-            "fullPath": "pricing/price-berg",
-            "childDirectories": [
-              {
-                "name": "src",
-                "fullPath": "pricing/price-berg/src",
-                "childDirectories": [
-                  {
-                    "name": "main",
-                    "fullPath": "pricing/price-berg/src/main",
-                    "childDirectories": [
-                      {
-                        "name": "java",
-                        "fullPath": "pricing/price-berg/src/main/java",
-                        "childDirectories": [
-                          {
-                            "name": "com",
-                            "fullPath": "pricing/price-berg/src/main/java/com",
-                            "childDirectories": [
-                              {
-                                "name": "cj",
-                                "fullPath": "pricing/price-berg/src/main/java/com/cj",
-                                "childDirectories": [
-                                  {
-                                    "name": "datameshpoc",
-                                    "fullPath": "pricing/price-berg/src/main/java/com/cj/datameshpoc",
-                                    "childDirectories": [
-                                      {
-                                        "name": "pricing",
-                                        "fullPath": "pricing/price-berg/src/main/java/com/cj/datameshpoc/pricing",
-                                        "childDirectories": [
-                                          {
-                                            "name": "priceberg",
-                                            "fullPath": "pricing/price-berg/src/main/java/com/cj/datameshpoc/pricing/priceberg",
-                                            "childDirectories": [],
-                                            "childFiles": [
-                                              {
-                                                "name": "Main.java",
-                                                "fullPath": "pricing/price-berg/src/main/java/com/cj/datameshpoc/pricing/priceberg/Main.java",
-                                                "loc": 135,
-                                                "count": 10
-                                              },
-                                              {
-                                                "name": "IcebergTableCreation.java",
-                                                "fullPath": "pricing/price-berg/src/main/java/com/cj/datameshpoc/pricing/priceberg/IcebergTableCreation.java",
-                                                "loc": 140,
-                                                "count": 2
-                                              }
-                                            ],
-                                            "loc": 275,
-                                            "count": 12
-                                          }
-                                        ],
-                                        "childFiles": [],
-                                        "loc": 275,
-                                        "count": 12
-                                      }
-                                    ],
-                                    "childFiles": [],
-                                    "loc": 275,
-                                    "count": 12
-                                  }
-                                ],
-                                "childFiles": [],
-                                "loc": 275,
-                                "count": 12
-                              }
-                            ],
-                            "childFiles": [],
-                            "loc": 275,
-                            "count": 12
-                          }
-                        ],
-                        "childFiles": [],
-                        "loc": 275,
-                        "count": 12
-                      },
-                      {
-                        "name": "resources",
-                        "fullPath": "pricing/price-berg/src/main/resources",
-                        "childDirectories": [],
-                        "childFiles": [
-                          {
-                            "name": "people.csv",
-                            "fullPath": "pricing/price-berg/src/main/resources/people.csv",
-                            "loc": 148,
-                            "count": 1
-                          },
-                          {
-                            "name": "application.properties",
-                            "fullPath": "pricing/price-berg/src/main/resources/application.properties",
-                            "loc": 69,
-                            "count": 1
-                          }
-                        ],
-                        "loc": 217,
-                        "count": 2
-                      }
-                    ],
-                    "childFiles": [],
-                    "loc": 492,
-                    "count": 14
-                  }
-                ],
-                "childFiles": [],
-                "loc": 492,
-                "count": 14
-              },
-              {
-                "name": ".idea",
-                "fullPath": "pricing/price-berg/.idea",
-                "childDirectories": [],
-                "childFiles": [
-                  {
-                    "name": "dbnavigator.xml",
-                    "fullPath": "pricing/price-berg/.idea/dbnavigator.xml",
-                    "loc": 45,
-                    "count": 5
-                  },
-                  {
-                    "name": "gradle.xml",
-                    "fullPath": "pricing/price-berg/.idea/gradle.xml",
-                    "loc": 185,
-                    "count": 2
-                  },
-                  {
-                    "name": "vcs.xml",
-                    "fullPath": "pricing/price-berg/.idea/vcs.xml",
-                    "loc": 59,
-                    "count": 1
-                  },
-                  {
-                    "name": "misc.xml",
-                    "fullPath": "pricing/price-berg/.idea/misc.xml",
-                    "loc": 197,
-                    "count": 1
-                  },
-                  {
-                    "name": ".gitignore",
-                    "fullPath": "pricing/price-berg/.idea/.gitignore",
-                    "loc": 42,
-                    "count": 1
-                  }
-                ],
-                "loc": 528,
-                "count": 10
-              },
-              {
-                "name": "gradle",
-                "fullPath": "pricing/price-berg/gradle",
-                "childDirectories": [
-                  {
-                    "name": "wrapper",
-                    "fullPath": "pricing/price-berg/gradle/wrapper",
-                    "childDirectories": [],
-                    "childFiles": [
-                      {
-                        "name": "gradle-wrapper.properties",
-                        "fullPath": "pricing/price-berg/gradle/wrapper/gradle-wrapper.properties",
-                        "loc": 175,
-                        "count": 1
-                      },
-                      {
-                        "name": "gradle-wrapper.jar",
-                        "fullPath": "pricing/price-berg/gradle/wrapper/gradle-wrapper.jar",
-                        "loc": 84,
-                        "count": 1
-                      }
-                    ],
-                    "loc": 259,
-                    "count": 2
-                  }
-                ],
-                "childFiles": [],
-                "loc": 259,
-                "count": 2
-              }
-            ],
-            "childFiles": [
-              {
-                "name": "build.gradle",
-                "fullPath": "pricing/price-berg/build.gradle",
-                "loc": 67,
-                "count": 4
-              },
-              {
-                "name": ".gitignore",
-                "fullPath": "pricing/price-berg/.gitignore",
-                "loc": 98,
-                "count": 3
-              },
-              {
-                "name": "README.md",
-                "fullPath": "pricing/price-berg/README.md",
-                "loc": 72,
-                "count": 2
-              },
-              {
-                "name": "settings.gradle",
-                "fullPath": "pricing/price-berg/settings.gradle",
-                "loc": 180,
-                "count": 1
-              },
-              {
-                "name": "gradlew.bat",
-                "fullPath": "pricing/price-berg/gradlew.bat",
-                "loc": 35,
-                "count": 1
-              },
-              {
-                "name": "gradlew",
-                "fullPath": "pricing/price-berg/gradlew",
-                "loc": 108,
-                "count": 1
-              },
-              {
-                "name": "docker-compose.yml",
-                "fullPath": "pricing/price-berg/docker-compose.yml",
-                "loc": 132,
-                "count": 1
-              }
-            ],
-            "loc": 1971,
-            "count": 39
-          },
-          {
-            "name": "price-service",
-            "fullPath": "pricing/price-service",
-            "childDirectories": [
-              {
-                "name": ".idea",
-                "fullPath": "pricing/price-service/.idea",
-                "childDirectories": [],
-                "childFiles": [
-                  {
-                    "name": "dbnavigator.xml",
-                    "fullPath": "pricing/price-service/.idea/dbnavigator.xml",
-                    "loc": 192,
-                    "count": 5
-                  },
-                  {
-                    "name": "gradle.xml",
-                    "fullPath": "pricing/price-service/.idea/gradle.xml",
-                    "loc": 88,
-                    "count": 2
-                  },
-                  {
-                    "name": "vcs.xml",
-                    "fullPath": "pricing/price-service/.idea/vcs.xml",
-                    "loc": 52,
-                    "count": 1
-                  },
-                  {
-                    "name": "uiDesigner.xml",
-                    "fullPath": "pricing/price-service/.idea/uiDesigner.xml",
-                    "loc": 193,
-                    "count": 1
-                  },
-                  {
-                    "name": "misc.xml",
-                    "fullPath": "pricing/price-service/.idea/misc.xml",
-                    "loc": 30,
-                    "count": 1
-                  },
-                  {
-                    "name": ".gitignore",
-                    "fullPath": "pricing/price-service/.idea/.gitignore",
-                    "loc": 161,
-                    "count": 1
-                  }
-                ],
-                "loc": 716,
-                "count": 11
-              },
-              {
-                "name": "src",
-                "fullPath": "pricing/price-service/src",
-                "childDirectories": [
-                  {
-                    "name": "main",
-                    "fullPath": "pricing/price-service/src/main",
-                    "childDirectories": [
-                      {
-                        "name": "resources",
-                        "fullPath": "pricing/price-service/src/main/resources",
-                        "childDirectories": [
-                          {
-                            "name": "db",
-                            "fullPath": "pricing/price-service/src/main/resources/db",
-                            "childDirectories": [
-                              {
-                                "name": "migration",
-                                "fullPath": "pricing/price-service/src/main/resources/db/migration",
-                                "childDirectories": [],
-                                "childFiles": [
-                                  {
-                                    "name": "V2__Insert_Seed_Data.sql",
-                                    "fullPath": "pricing/price-service/src/main/resources/db/migration/V2__Insert_Seed_Data.sql",
-                                    "loc": 39,
-                                    "count": 1
-                                  },
-                                  {
-                                    "name": "V1__Create_product_customer_agreement_tables.sql",
-                                    "fullPath": "pricing/price-service/src/main/resources/db/migration/V1__Create_product_customer_agreement_tables.sql",
-                                    "loc": 115,
-                                    "count": 1
-                                  }
-                                ],
-                                "loc": 154,
-                                "count": 2
-                              }
-                            ],
-                            "childFiles": [],
-                            "loc": 154,
-                            "count": 2
-                          }
-                        ],
-                        "childFiles": [
-                          {
-                            "name": "application.properties",
-                            "fullPath": "pricing/price-service/src/main/resources/application.properties",
-                            "loc": 153,
-                            "count": 3
-                          }
-                        ],
-                        "loc": 307,
-                        "count": 5
-                      },
-                      {
-                        "name": "java",
-                        "fullPath": "pricing/price-service/src/main/java",
-                        "childDirectories": [
-                          {
-                            "name": "org",
-                            "fullPath": "pricing/price-service/src/main/java/org",
-                            "childDirectories": [
-                              {
-                                "name": "example",
-                                "fullPath": "pricing/price-service/src/main/java/org/example",
-                                "childDirectories": [],
-                                "childFiles": [
-                                  {
-                                    "name": "Main.java",
-                                    "fullPath": "pricing/price-service/src/main/java/org/example/Main.java",
-                                    "loc": 122,
-                                    "count": 2
-                                  }
-                                ],
-                                "loc": 122,
-                                "count": 2
-                              }
-                            ],
-                            "childFiles": [],
-                            "loc": 122,
-                            "count": 2
-                          },
-                          {
-                            "name": "com",
-                            "fullPath": "pricing/price-service/src/main/java/com",
-                            "childDirectories": [
-                              {
-                                "name": "cj",
-                                "fullPath": "pricing/price-service/src/main/java/com/cj",
-                                "childDirectories": [
-                                  {
-                                    "name": "datameshpoc",
-                                    "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc",
-                                    "childDirectories": [
-                                      {
-                                        "name": "pricing",
-                                        "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing",
-                                        "childDirectories": [
-                                          {
-                                            "name": "api",
-                                            "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api",
-                                            "childDirectories": [
-                                              {
-                                                "name": "service",
-                                                "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/service",
-                                                "childDirectories": [],
-                                                "childFiles": [
-                                                  {
-                                                    "name": "PriceService.java",
-                                                    "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/service/PriceService.java",
-                                                    "loc": 56,
-                                                    "count": 2
-                                                  }
-                                                ],
-                                                "loc": 56,
-                                                "count": 2
-                                              },
-                                              {
-                                                "name": "model",
-                                                "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/model",
-                                                "childDirectories": [],
-                                                "childFiles": [
-                                                  {
-                                                    "name": "Product.java",
-                                                    "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/model/Product.java",
-                                                    "loc": 178,
-                                                    "count": 2
-                                                  },
-                                                  {
-                                                    "name": "PriceRequest.java",
-                                                    "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/model/PriceRequest.java",
-                                                    "loc": 33,
-                                                    "count": 2
-                                                  }
-                                                ],
-                                                "loc": 211,
-                                                "count": 4
-                                              },
-                                              {
-                                                "name": "controller",
-                                                "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/controller",
-                                                "childDirectories": [],
-                                                "childFiles": [
-                                                  {
-                                                    "name": "PriceController.java",
-                                                    "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/controller/PriceController.java",
-                                                    "loc": 167,
-                                                    "count": 2
-                                                  }
-                                                ],
-                                                "loc": 167,
-                                                "count": 2
-                                              },
-                                              {
-                                                "name": "repository",
-                                                "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/repository",
-                                                "childDirectories": [],
-                                                "childFiles": [
-                                                  {
-                                                    "name": "PriceDAO.java",
-                                                    "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/repository/PriceDAO.java",
-                                                    "loc": 61,
-                                                    "count": 1
-                                                  }
-                                                ],
-                                                "loc": 61,
-                                                "count": 1
-                                              }
-                                            ],
-                                            "childFiles": [
-                                              {
-                                                "name": "Main.java",
-                                                "fullPath": "pricing/price-service/src/main/java/com/cj/datameshpoc/pricing/api/Main.java",
-                                                "loc": 199,
-                                                "count": 1
-                                              }
-                                            ],
-                                            "loc": 694,
-                                            "count": 10
-                                          }
-                                        ],
-                                        "childFiles": [],
-                                        "loc": 694,
-                                        "count": 10
-                                      }
-                                    ],
-                                    "childFiles": [],
-                                    "loc": 694,
-                                    "count": 10
-                                  }
-                                ],
-                                "childFiles": [],
-                                "loc": 694,
-                                "count": 10
-                              }
-                            ],
-                            "childFiles": [],
-                            "loc": 694,
-                            "count": 10
-                          }
-                        ],
-                        "childFiles": [],
-                        "loc": 816,
-                        "count": 12
-                      }
-                    ],
-                    "childFiles": [],
-                    "loc": 1123,
-                    "count": 17
-                  }
-                ],
-                "childFiles": [],
-                "loc": 1123,
-                "count": 17
-              },
-              {
-                "name": "gradle",
-                "fullPath": "pricing/price-service/gradle",
-                "childDirectories": [
-                  {
-                    "name": "wrapper",
-                    "fullPath": "pricing/price-service/gradle/wrapper",
-                    "childDirectories": [],
-                    "childFiles": [
-                      {
-                        "name": "gradle-wrapper.properties",
-                        "fullPath": "pricing/price-service/gradle/wrapper/gradle-wrapper.properties",
-                        "loc": 81,
-                        "count": 1
-                      },
-                      {
-                        "name": "gradle-wrapper.jar",
-                        "fullPath": "pricing/price-service/gradle/wrapper/gradle-wrapper.jar",
-                        "loc": 127,
-                        "count": 1
-                      }
-                    ],
-                    "loc": 208,
-                    "count": 2
-                  }
-                ],
-                "childFiles": [],
-                "loc": 208,
-                "count": 2
-              }
-            ],
-            "childFiles": [
-              {
-                "name": "README.md",
-                "fullPath": "pricing/price-service/README.md",
-                "loc": 78,
-                "count": 5
-              },
-              {
-                "name": "build.gradle",
-                "fullPath": "pricing/price-service/build.gradle",
-                "loc": 110,
-                "count": 4
-              },
-              {
-                "name": "settings.gradle",
-                "fullPath": "pricing/price-service/settings.gradle",
-                "loc": 48,
-                "count": 1
-              },
-              {
-                "name": "gradlew.bat",
-                "fullPath": "pricing/price-service/gradlew.bat",
-                "loc": 103,
-                "count": 1
-              },
-              {
-                "name": "gradlew",
-                "fullPath": "pricing/price-service/gradlew",
-                "loc": 170,
-                "count": 1
-              },
-              {
-                "name": ".gitignore",
-                "fullPath": "pricing/price-service/.gitignore",
-                "loc": 95,
-                "count": 1
-              }
-            ],
-            "loc": 2651,
-            "count": 43
-          }
-        ],
-        "childFiles": [],
-        "loc": 4622,
-        "count": 82
-      },
-      {
-        "name": ".idea",
-        "fullPath": ".idea",
-        "childDirectories": [],
-        "childFiles": [
-          {
-            "name": "vcs.xml",
-            "fullPath": ".idea/vcs.xml",
-            "loc": 64,
-            "count": 1
-          },
-          {
-            "name": "modules.xml",
-            "fullPath": ".idea/modules.xml",
-            "loc": 189,
-            "count": 1
-          },
-          {
-            "name": "misc.xml",
-            "fullPath": ".idea/misc.xml",
-            "loc": 31,
-            "count": 1
-          },
-          {
-            "name": "dbnavigator.xml",
-            "fullPath": ".idea/dbnavigator.xml",
-            "loc": 157,
-            "count": 1
-          },
-          {
-            "name": ".name",
-            "fullPath": ".idea/.name",
-            "loc": 91,
-            "count": 1
-          },
-          {
-            "name": ".gitignore",
-            "fullPath": ".idea/.gitignore",
-            "loc": 144,
-            "count": 1
-          }
-        ],
-        "loc": 676,
-        "count": 6
-      }
-    ],
-    "childFiles": [
-      {
-        "name": "data-mesh-poc.iml",
-        "fullPath": "data-mesh-poc.iml",
-        "loc": 118,
-        "count": 1
-      },
-      {
-        "name": ".gitignore",
-        "fullPath": ".gitignore",
-        "loc": 76,
-        "count": 1
-      },
-      {
-        "name": ".DS_Store",
-        "fullPath": ".DS_Store",
-        "loc": 129,
-        "count": 1
-      }
-    ],
-    "loc": 5621,
-    "count": 91
-  };
+// CSV parsing function (as provided before)
+function csvToNestedStructure(csvString) {
+    const lines = csvString.trim().split('\n');
+    const header = lines.shift(); 
+
+    const root = {
+        name: "root",
+        fullPath: "", 
+        childDirectories: [],
+        childFiles: [],
+        loc: 0,
+        count: 0
+    };
+
+    lines.forEach(line => {
+        const values = line.split(',');
+        if (values.length < 3) return; 
+
+        const countStr = values[0];
+        const path = values[1];
+        const locStr = values[2];
+
+        if (!path || path.trim() === "") return; 
+
+        const count = parseInt(countStr, 10);
+        const loc = parseInt(locStr, 10);
+
+        if (isNaN(count) || isNaN(loc)) return;
 
 
+        const parts = path.split('/');
+        const fileName = parts.pop(); 
+
+        let currentDirectory = root;
+        let currentPathSegments = [];
+
+        parts.forEach(partName => {
+            currentPathSegments.push(partName);
+            let directory = currentDirectory.childDirectories.find(dir => dir.name === partName);
+            if (!directory) {
+                directory = {
+                    name: partName,
+                    fullPath: currentPathSegments.join('/'),
+                    childDirectories: [],
+                    childFiles: [],
+                    loc: 0, 
+                    count: 0 
+                };
+                currentDirectory.childDirectories.push(directory);
+            }
+            currentDirectory = directory;
+        });
+
+        if (fileName) { // Ensure fileName is not empty (e.g. for paths ending in /)
+            currentDirectory.childFiles.push({
+                name: fileName,
+                fullPath: path, 
+                loc: loc,
+                count: count
+            });
+        } else {
+             // This case might indicate a path that is a directory itself,
+             // but our CSV structure implies all lines are files.
+             // For now, we assume fileName is always present.
+        }
+    });
+
+    function calculateDirectoryStats(directoryNode) {
+        let totalLoc = 0;
+        let totalCount = 0;
+
+        directoryNode.childFiles.forEach(file => {
+            totalLoc += file.loc;
+            totalCount += file.count;
+        });
+
+        directoryNode.childDirectories.forEach(childDir => {
+            calculateDirectoryStats(childDir); 
+            totalLoc += childDir.loc;
+            totalCount += childDir.count;
+        });
+
+        directoryNode.loc = totalLoc;
+        directoryNode.count = totalCount;
+    }
+
+    calculateDirectoryStats(root); 
+    return root;
+}
+
+
+// Constants for visualization
 const FOUNDATION_HEIGHT = 5;
 const PADDING = 20;
 const ITEM_SPACING = 10;
-const HEIGHT_FACTOR = 20;
+const HEIGHT_FACTOR = 50;
 const MIN_VISIBLE_BUILDING_HEIGHT = 0.5;
-const MIN_LAYOUT_DIMENSION = 5; // Min dimension for layout purposes (for 0-loc files)
-const MIN_RENDER_DIMENSION = 2.5; // Min actual render dimension for 0-loc files
-
+const MIN_LAYOUT_DIMENSION = 5; 
+const MIN_RENDER_DIMENSION = 2.5;
 
 const BASE_FOUNDATION_COLOR = new THREE.Color(0xdddddd);
 const FOUNDATION_DARKEN_PER_LEVEL = 0.05;
 
 const GROUND_MATERIAL = new THREE.MeshLambertMaterial({ color: 0x50c878 });
+const PACKING_ASPECT_RATIO_TARGET = 2.0; // You can tune this
 
-const PACKING_ASPECT_RATIO_TARGET = 2.0; // Lower numbers try harder to make rows squarer
-
+// Global Three.js variables
 let scene, camera, renderer, controls;
 let raycaster, mouse, tooltipElement, intersectedObject = null;
 const pickableObjects = [];
 
+// Helper function to collect all files
 function collectAllFiles(node, fileList) {
     if (!node) return;
     if (node.childFiles && Array.isArray(node.childFiles)) {
@@ -682,6 +127,7 @@ function collectAllFiles(node, fileList) {
     }
 }
 
+// Function to preprocess file data for heat calculation
 function preprocessFileData(rootNode) {
     const allFiles = [];
     collectAllFiles(rootNode, allFiles);
@@ -695,6 +141,7 @@ function preprocessFileData(rootNode) {
     });
 }
 
+// Function to get color based on heat
 function getHeatColor(heatInput) {
     const heat = (typeof heatInput === 'number' && !isNaN(heatInput)) ? heatInput : 0;
     const color = new THREE.Color();
@@ -711,84 +158,98 @@ function getHeatColor(heatInput) {
     return color;
 }
 
+// Squarified packing layout function
 function calculateLayout(node) {
     if (!node) return { width: 0, depth: 0 };
     const isDirectoryNode = !!(node.childFiles || node.childDirectories);
     node.isDirectory = isDirectoryNode;
 
     if (isDirectoryNode) {
-        const childrenToLayout = [...(node.childFiles || []), ...(node.childDirectories || [])];
-        childrenToLayout.forEach(child => {
-            calculateLayout(child); // Recursive call to ensure children dimensions are calculated
-            if (!child.isDirectory) { // It's a File, ensure buildingHeight is set
+        let layoutItems = [];
+        const childrenToProcess = [...(node.childFiles || []), ...(node.childDirectories || [])];
+
+        childrenToProcess.forEach(child => {
+            calculateLayout(child); 
+            const isChildDir = child.isDirectory;
+            const childW = isChildDir ? child.calculatedOuterWidth : (child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION);
+            const childD = isChildDir ? child.calculatedOuterDepth : (child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION);
+            if (!isChildDir) { 
                  child.buildingHeight = Math.max((child.count || 0) * HEIGHT_FACTOR, MIN_VISIBLE_BUILDING_HEIGHT);
             }
+            layoutItems.push({ node: child, w: childW, d: childD, area: childW * childD });
         });
 
-        // Sort children before packing, e.g., by decreasing width (heuristic)
-        childrenToLayout.sort((a, b) => {
-            const widthA = a.isDirectory ? a.calculatedOuterWidth : (a.loc > 0 ? a.loc : MIN_LAYOUT_DIMENSION);
-            const widthB = b.isDirectory ? b.calculatedOuterWidth : (b.loc > 0 ? b.loc : MIN_LAYOUT_DIMENSION);
-            return widthB - widthA;
-        });
+        layoutItems.sort((a, b) => b.area - a.area || Math.max(b.w, b.d) - Math.max(a.w, a.d));
 
-        let rows = [];
-        let currentRowItems = [];
-        let currentRowWidth = 0;
-        let currentRowMaxDepth = 0;
+        let currentZOffset = 0;
+        node.innerWidth = 0;
+        let remainingItems = [...layoutItems];
 
-        childrenToLayout.forEach(child => {
-            const childW = child.isDirectory ? child.calculatedOuterWidth : (child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION);
-            const childD = child.isDirectory ? child.calculatedOuterDepth : (child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION);
+        while (remainingItems.length > 0) {
+            let itemsInCurrentRow = [];
+            let rowWidth = 0;
+            let rowMaxActualDepth = 0; 
+            let availableRowWidth; 
 
-            if (currentRowItems.length === 0) {
-                currentRowItems.push({ node: child, w: childW, d: childD });
-                currentRowWidth = childW;
-                currentRowMaxDepth = childD;
+            if (itemsInCurrentRow.length === 0 && remainingItems.length > 0) {
+                 const firstItem = remainingItems[0];
+                 availableRowWidth = firstItem.w; 
             } else {
-                const potentialRowWidth = currentRowWidth + ITEM_SPACING + childW;
-                const potentialMaxDepth = Math.max(currentRowMaxDepth, childD);
-                
-                // Heuristic: if adding the item makes the row too elongated, or it's the first item (always add)
-                if (potentialRowWidth / potentialMaxDepth > PACKING_ASPECT_RATIO_TARGET && currentRowItems.length > 0 && currentRowItems.length < 5) { // Add up to 5 items before aggressively making new row
-                    rows.push({ items: currentRowItems, width: currentRowWidth, maxDepth: currentRowMaxDepth });
-                    currentRowItems = [{ node: child, w: childW, d: childD }];
-                    currentRowWidth = childW;
-                    currentRowMaxDepth = childD;
+                let totalRemainingArea = 0;
+                remainingItems.forEach(item => totalRemainingArea += item.w * item.d);
+                availableRowWidth = Math.max(Math.sqrt(totalRemainingArea), node.innerWidth * 0.5, MIN_LAYOUT_DIMENSION);
+            }
+
+            let tempNotFitting = [];
+            for (let i = 0; i < remainingItems.length; i++) {
+                const item = remainingItems[i];
+                if (itemsInCurrentRow.length === 0) { 
+                    itemsInCurrentRow.push(item);
+                    rowWidth = item.w;
+                    rowMaxActualDepth = Math.max(rowMaxActualDepth, item.d);
+                } else if (rowWidth + ITEM_SPACING + item.w <= availableRowWidth * 1.5 || itemsInCurrentRow.length < 2 ) { 
+                    itemsInCurrentRow.push(item);
+                    rowWidth += ITEM_SPACING + item.w;
+                    rowMaxActualDepth = Math.max(rowMaxActualDepth, item.d);
                 } else {
-                    currentRowItems.push({ node: child, w: childW, d: childD });
-                    currentRowWidth = potentialRowWidth; // Recalculate actual row width
-                    currentRowMaxDepth = potentialMaxDepth;
+                    tempNotFitting.push(item);
                 }
             }
-        });
-        if (currentRowItems.length > 0) {
-            // Recalculate width for the final row properly
-            let finalRowW = 0;
-            currentRowItems.forEach((item, index) => {
-                finalRowW += item.w;
-                if (index < currentRowItems.length -1) finalRowW += ITEM_SPACING;
-            });
-            rows.push({ items: currentRowItems, width: finalRowW, maxDepth: currentRowMaxDepth });
-        }
-        
-        node.innerWidth = 0;
-        let currentZOffsetForRowBase = 0;
-        rows.forEach(row => {
+            
+            if (itemsInCurrentRow.length === 0) { 
+                 if(remainingItems.length > 0) { 
+                    const fallbackItem = remainingItems.shift();
+                    itemsInCurrentRow.push(fallbackItem);
+                    rowWidth = fallbackItem.w;
+                    rowMaxActualDepth = Math.max(rowMaxActualDepth, fallbackItem.d);
+                    tempNotFitting = remainingItems; 
+                 } else {
+                    break; 
+                 }
+            }
+
             let currentXOffsetInRow = 0;
-            row.items.forEach(item => {
+            itemsInCurrentRow.forEach(item => {
                 item.node.prelimX = currentXOffsetInRow + item.w / 2;
-                item.node.prelimZ = currentZOffsetForRowBase + item.d / 2;
+                item.node.prelimZ = currentZOffset + item.d / 2; 
                 currentXOffsetInRow += item.w + ITEM_SPACING;
             });
-            node.innerWidth = Math.max(node.innerWidth, row.width);
-            currentZOffsetForRowBase += row.maxDepth + ITEM_SPACING;
-        });
-        node.innerDepth = (rows.length > 0) ? currentZOffsetForRowBase - ITEM_SPACING : 0;
 
-        childrenToLayout.forEach(childNode => { // Or iterate through items in rows
-            childNode.renderOffsetX = (childNode.prelimX || 0) - node.innerWidth / 2;
-            childNode.renderOffsetZ = (childNode.prelimZ || 0) - node.innerDepth / 2;
+            node.innerWidth = Math.max(node.innerWidth, rowWidth);
+            currentZOffset += rowMaxActualDepth + ITEM_SPACING;
+            remainingItems = tempNotFitting;
+        }
+
+        node.innerDepth = (currentZOffset > 0) ? currentZOffset - ITEM_SPACING : 0;
+
+        layoutItems.forEach(item => { 
+            if (item.node.prelimX !== undefined) { 
+                item.node.renderOffsetX = item.node.prelimX - node.innerWidth / 2;
+                item.node.renderOffsetZ = item.node.prelimZ - node.innerDepth / 2;
+            } else {
+                item.node.renderOffsetX = 0;
+                item.node.renderOffsetZ = 0;
+            }
         });
         
         node.calculatedOuterWidth = node.innerWidth + 2 * PADDING;
@@ -796,7 +257,7 @@ function calculateLayout(node) {
         node.foundationHeight = FOUNDATION_HEIGHT;
         return { width: node.calculatedOuterWidth, depth: node.calculatedOuterDepth };
 
-    } else { // It's a File
+    } else { 
         if (node.buildingHeight === undefined) {
              node.buildingHeight = Math.max((node.count || 0) * HEIGHT_FACTOR, MIN_VISIBLE_BUILDING_HEIGHT);
         }
@@ -806,6 +267,7 @@ function calculateLayout(node) {
     }
 }
 
+// Function to create Three.js objects
 function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLevel) {
     if (!node) return;
 
@@ -830,15 +292,9 @@ function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLev
         const childrenOriginX = baseCenterPosition.x;
         const childrenOriginZ = baseCenterPosition.z;
         
-        // Use childrenToLayout from node if it was stored, or iterate directly
-        // The renderOffsetX/Z are on the child nodes themselves
         const childrenToDraw = [...(node.childFiles || []), ...(node.childDirectories || [])];
         childrenToDraw.forEach(childNode => {
             if(childNode.renderOffsetX === undefined || childNode.renderOffsetZ === undefined) {
-                // This can happen if a child was not part of the layout process, e.g. an empty childrenToLayout array for parent
-                // Or if childNode somehow isn't one of the items processed in calculateLayout's packing.
-                // Default to 0,0 if undefined to prevent NaN errors, though ideally this shouldn't be hit.
-                // console.warn("Child node missing renderOffset:", childNode.name);
                 childNode.renderOffsetX = 0;
                 childNode.renderOffsetZ = 0;
             }
@@ -846,7 +302,7 @@ function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLev
             createThreeObjects(childNode, parentThreeGroup, childCenterPos, depthLevel + 1);
         });
 
-    } else { // It's a File
+    } else { 
         const buildingWidth = node.loc > 0 ? node.loc : MIN_RENDER_DIMENSION;
         const buildingDepth = node.loc > 0 ? node.loc : MIN_RENDER_DIMENSION;
         const buildingHeight = node.buildingHeight;
@@ -865,6 +321,7 @@ function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLev
     }
 }
 
+// Mouse move and tooltip functions
 function onMouseMove(event) {
     if (!mouse || !tooltipElement) return;
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -919,10 +376,12 @@ function updateTooltip() {
     }
 }
 
-function init() {
-    preprocessFileData(nestedStructure);
+// Renamed original init to initScene, now accepts nestedStructure
+function initScene(currentNestedStructure) {
+    preprocessFileData(currentNestedStructure);
+    
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(0xabcdef);
     const aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75, aspect, 1, 50000);
     const canvas = document.getElementById('canvas');
@@ -954,7 +413,9 @@ function init() {
     mouse = new THREE.Vector2(-1000,-1000);
     tooltipElement = document.getElementById('tooltip');
     window.addEventListener('mousemove', onMouseMove, false);
-    const overallLayout = calculateLayout(nestedStructure);
+    
+    const overallLayout = calculateLayout(currentNestedStructure);
+    
     const groundSize = Math.max(overallLayout.width || 100, overallLayout.depth || 100, 200) * 2.0;
     const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
     const groundMesh = new THREE.Mesh(groundGeo, GROUND_MATERIAL.clone());
@@ -962,12 +423,13 @@ function init() {
     groundMesh.position.y = -0.1;
     groundMesh.receiveShadow = true;
     scene.add(groundMesh);
-    if (nestedStructure.isDirectory) {
-         createThreeObjects(nestedStructure, scene, new THREE.Vector3(0, 0, 0), 0);
-    } else if (nestedStructure.loc !== undefined && nestedStructure.count !== undefined) {
-         createThreeObjects(nestedStructure, scene, new THREE.Vector3(0,0,0), 0);
+    
+    if (currentNestedStructure.isDirectory) {
+         createThreeObjects(currentNestedStructure, scene, new THREE.Vector3(0, 0, 0), 0);
+    } else if (currentNestedStructure.loc !== undefined && currentNestedStructure.count !== undefined) { 
+         createThreeObjects(currentNestedStructure, scene, new THREE.Vector3(0,0,0), 0);
     } else {
-         (nestedStructure.layoutChildrenData || []).forEach(itemData => {
+         (currentNestedStructure.layoutChildrenData || []).forEach(itemData => {
              const childNode = itemData.node;
              const childCenterPos = new THREE.Vector3(
                  childNode.renderOffsetX || 0,
@@ -977,9 +439,10 @@ function init() {
              createThreeObjects(childNode, scene, childCenterPos, 0);
          });
     }
+
     if (overallLayout && overallLayout.width !== undefined && overallLayout.depth !== undefined && overallLayout.width > 0 && overallLayout.depth > 0) {
         camera.position.set(overallLayout.width * 0.75, Math.max(overallLayout.width, overallLayout.depth) * 0.6, overallLayout.depth * 0.75);
-        controls.target.set(0, Math.min(overallLayout.width, overallLayout.depth) / 8 , 0); // Lower target slightly
+        controls.target.set(0, Math.min(overallLayout.width, overallLayout.depth) / 8 , 0);
     } else {
         camera.position.set(100, 150, 200);
         controls.target.set(0, 0, 0);
@@ -987,10 +450,36 @@ function init() {
     camera.lookAt(controls.target);
     controls.update();
     window.addEventListener('resize', onWindowResize, false);
-    animate();
+    animate(); // Start animation loop here
 }
 
+// New async function to load data and then initialize the scene
+async function loadDataAndInitialize() {
+    try {
+        const response = await fetch('data.csv'); // Path to your CSV file
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} - Could not load data.csv`);
+        }
+        const csvString = await response.text();
+        const dynamicallyGeneratedNestedStructure = csvToNestedStructure(csvString);
+        
+        initScene(dynamicallyGeneratedNestedStructure); // Call the main scene initialization
+
+    } catch (error) {
+        console.error("Error loading or processing CSV data:", error);
+        const canvasElement = document.getElementById('canvas');
+        if(canvasElement) {
+            canvasElement.outerHTML = `<div style="padding: 20px; color: red; text-align: center;">
+                                         <p>Error loading data: ${error.message}</p>
+                                         <p>Please ensure 'data.csv' is in the same directory as city.html and that you are running this from a web server.</p>
+                                       </div>`;
+        }
+    }
+}
+
+
 function onWindowResize() {
+    if (!camera || !renderer) return;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -998,9 +487,10 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
-    updateTooltip();
-    renderer.render(scene, camera);
+    if (controls) controls.update();
+    updateTooltip(); // updateTooltip needs raycaster etc. which are init in initScene
+    if (scene && camera && renderer) renderer.render(scene, camera);
 }
 
-init();
+// Start the application by loading data
+loadDataAndInitialize();
