@@ -4,7 +4,13 @@ City Blocks is a 3D visualization of code churn and size in a Git repo.
 
 ![visuals](city-blocks.png)
 
-## How to use
+## Legend
+- Grey foundations are parent directories. It darkens progressively as it stacks up.
+- Area of the building or block is relative to the lines of code
+- Height is relative to the number of commits made to that file
+- Color of the building i.e heat is based on churn % compared to the file with highest churn
+
+## How to use (only tested in Mac)
 
 1. run `npm install`
 2. run `node index.js`

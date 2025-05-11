@@ -96,7 +96,7 @@ function csvToNestedStructure(csvString) {
 const FOUNDATION_HEIGHT = 5;
 const PADDING = 20;
 const ITEM_SPACING = 10;
-const HEIGHT_FACTOR = 50;
+const HEIGHT_FACTOR = 30;
 const MIN_VISIBLE_BUILDING_HEIGHT = 0.5;
 const MIN_LAYOUT_DIMENSION = 5; 
 const MIN_RENDER_DIMENSION = 2.5;
@@ -381,7 +381,7 @@ function initScene(currentNestedStructure) {
     preprocessFileData(currentNestedStructure);
     
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xabcdef);
+    scene.background = new THREE.Color(0x000000);
     const aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75, aspect, 1, 50000);
     const canvas = document.getElementById('canvas');
