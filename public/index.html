@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>City Blocks</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #f0f0f0; }
+        #canvas { width: 100vw; height: 100vh; display: block; }
+        /* Tooltip Styling */
+        #tooltip {
+            position: absolute;
+            display: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none; /* So it doesn't interfere with mouse events on the canvas */
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            white-space: nowrap; /* Prevent wrapping for simple tooltips */
+            z-index: 100; /* Ensure it's on top */
+        }
+        #tooltip strong {
+            font-size: 14px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        #tooltip ul {
+            margin: 0;
+            padding: 0 0 0 18px; /* Indent bullets */
+            list-style-type: disc;
+        }
+        #tooltip li {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="tooltip"></div> {/* Tooltip element added here */}
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="city_visualization.js"></script>
+</body>
+</html>
