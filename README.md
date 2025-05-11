@@ -2,8 +2,11 @@
 
 City Blocks is a 3D visualization of code churn and size in a Git repo.
 
+![visuals](city-blocks.png)
+
 ## How to use
 
 1. run `npm install`
 2. run `node index.js`
 3. change input object as needed // TODO read from CSV
+4. browse `http://localhost:3000`
