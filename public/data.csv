@@ -1,10 +1,12 @@
 count,path,loc
-2,README.md,11
+3,README.md,11
+2,public/city_visualization.js,495
+2,.gitignore,1
 1,public/index.html,51
-1,public/city_visualization.js,1005
+1,public/data.csv,10
 1,package.json,15
 1,package-lock.json,750
 1,LICENSE.md,595
 1,index.js,18
+1,git_repo_stats.sh,134
 1,city-blocks.png,279
-1,.gitignore,0
