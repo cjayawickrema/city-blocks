@@ -94,9 +94,8 @@ function csvToNestedStructure(csvString) {
 const FOUNDATION_HEIGHT = 5;
 const PADDING = 20; 
 const ITEM_SPACING = 10; 
-// HEIGHT_FACTOR is not used if building dimensions are based on 'loc' for cubes.
-const HEIGHT_FACTOR = 30; 
-const MIN_VISIBLE_BUILDING_SIDE = 2.5; // Min side length for a building cube if loc is 0 or too small
+const POWER_CONSTANT_P = 0.2;
+const MIN_VISIBLE_BUILDING_DIMENSION = 1.0; 
 const MIN_LAYOUT_DIMENSION = 5; 
 
 const BASE_FOUNDATION_COLOR = new THREE.Color(0xdddddd); 
@@ -108,6 +107,51 @@ let scene, camera, renderer, controls;
 let raycaster, mouse, tooltipElement, intersectedObject = null;
 const pickableObjects = []; 
 let loadingMessageElement;
+
+function calculateHeightPower(x, k, p) {
+  if (k < 0 && p % 1 !== 0) {
+    console.warn("Calculating non-integer power of negative k results in Complex number. Returning NaN.");
+    return NaN;
+  }
+   if (x < 0) {
+      console.warn("Input x is negative. Result may be negative or NaN.");
+      x = 0;
+  }
+  const kValue = (k < 0 && p % 2 === 0) ? Math.abs(k) : k; 
+  return x * Math.pow(kValue, p);
+}
+
+function calculateWidthPower(x, k, p) {
+  const power = -p / 2;
+   if (k < 0 && power % 1 !== 0) {
+    console.warn("Calculating non-integer power of negative k results in Complex number. Returning NaN.");
+    return NaN;
+  }
+   if (x < 0) {
+      console.warn("Input x is negative. Result may be negative or NaN.");
+      x = 0;
+  }
+  const kValue = (k < 0 && power % 2 === 0) ? Math.abs(k) : k;
+  return x * Math.pow(kValue, power);
+}
+
+function calculateLengthPower(x, k, p) {
+    const power = -p / 2;
+   if (k < 0 && power % 1 !== 0) {
+    console.warn("Calculating non-integer power of negative k results in Complex number. Returning NaN.");
+    return NaN;
+  }
+   if (x < 0) {
+      console.warn("Input x is negative. Result may be negative or NaN.");
+      x = 0;
+  }
+  const kValue = (k < 0 && power % 2 === 0) ? Math.abs(k) : k;
+  // Ensure kValue for division is not zero if original k was zero
+  const divisorK = kValue === 0 ? ( (power < 0) ? Number.EPSILON : 0 ) : kValue;
+  if (divisorK === 0 && power < 0) return x / Number.EPSILON; // Avoid division by zero, make it very large
+  return x * Math.pow(divisorK, power);
+}
+
 
 function collectAllFiles(node, fileList) {
     if (!node) return;
@@ -127,24 +171,26 @@ function preprocessFileData(rootNode) {
     const allFiles = [];
     collectAllFiles(rootNode, allFiles);
 
-    let largestCountValue = 0;
+    let maxCountFound = 0; 
+
     if (allFiles.length > 0) {
-        largestCountValue = allFiles.reduce((max, file) => Math.max(max, file.count || 0), 0);
+        maxCountFound = allFiles.reduce((max, file) => Math.max(max, file.count || 0), 0);
     }
-    const effectiveLargestCount = largestCountValue === 0 ? 1 : largestCountValue;
+    
+    const effectiveDenominatorForHeat = maxCountFound === 0 ? 1 : maxCountFound;
 
     allFiles.forEach(file => {
-        file.heat = (file.count || 0) / effectiveLargestCount;
-        // 'loc' from CSV is used directly. Ensure it's a number.
+        file.heat = (file.count || 0) / effectiveDenominatorForHeat;
         file.loc = file.loc || 0; 
+        file.count = file.count || 0; 
     });
 }
 
 function getHeatColor(heatInput) {
     const heat = (typeof heatInput === 'number' && !isNaN(heatInput)) ? heatInput : 0;
     const color = new THREE.Color();
-    const yellow = new THREE.Color(0xffff00); // Heat = 0
-    const red = new THREE.Color(0xff0000);     // Heat = 1
+    const yellow = new THREE.Color(0xffff00); 
+    const red = new THREE.Color(0xff0000);     
 
     if (heat <= 0) return yellow; 
     if (heat >= 1) return red;   
@@ -166,16 +212,32 @@ function calculateLayout(node) {
         childrenToProcess.forEach(child => {
             calculateLayout(child); 
             const isChildDir = child.isDirectory;
-            let childW, childD;
+            let childW, childD, childH;
 
             if (isChildDir) {
                 childW = child.calculatedOuterWidth;
                 childD = child.calculatedOuterDepth;
             } else { // It's a File
                 child.loc = child.loc || 0; 
-                childW = child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION;
-                childD = child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION;
-                child.buildingHeight = child.loc > 0 ? child.loc : MIN_VISIBLE_BUILDING_SIDE; // Height is 'loc' for a cube
+                child.count = child.count === undefined ? 1 : Math.max(child.count, Number.EPSILON); // Ensure count is at least a tiny positive for power calcs
+
+                // Use new dimension calculation functions
+                childW = calculateWidthPower(child.loc, child.count, POWER_CONSTANT_P);
+                childD = calculateLengthPower(child.loc, child.count, POWER_CONSTANT_P);
+                childH = calculateHeightPower(child.loc, child.count, POWER_CONSTANT_P);
+                
+                // Handle NaN results from power functions (e.g., if k was negative and p non-integer)
+                if (isNaN(childW)) childW = MIN_LAYOUT_DIMENSION;
+                if (isNaN(childD)) childD = MIN_LAYOUT_DIMENSION;
+                if (isNaN(childH)) childH = MIN_VISIBLE_BUILDING_DIMENSION;
+
+
+                // Apply minimums for layout footprint
+                childW = Math.max(childW, MIN_LAYOUT_DIMENSION);
+                childD = Math.max(childD, MIN_LAYOUT_DIMENSION);
+                child.buildingHeight = Math.max(childH, MIN_VISIBLE_BUILDING_DIMENSION);
+                child.buildingWidth = childW; // Store for createThreeObjects
+                child.buildingDepth = childD; // Store for createThreeObjects
             }
             layoutItems.push({ node: child, w: childW, d: childD }); 
         });
@@ -255,11 +317,22 @@ function calculateLayout(node) {
 
     } else { // It's a File
         node.loc = node.loc || 0; 
+        node.count = node.count === undefined ? 1 : Math.max(node.count, Number.EPSILON);
+
         if (node.buildingHeight === undefined) { 
-             node.buildingHeight = node.loc > 0 ? node.loc : MIN_VISIBLE_BUILDING_SIDE;
+             const height = calculateHeightPower(node.loc, node.count, POWER_CONSTANT_P);
+             node.buildingHeight = Math.max(isNaN(height) ? MIN_VISIBLE_BUILDING_DIMENSION : height, MIN_VISIBLE_BUILDING_DIMENSION);
         }
-        const w = node.loc > 0 ? node.loc : MIN_LAYOUT_DIMENSION;
-        const d = node.loc > 0 ? node.loc : MIN_LAYOUT_DIMENSION;
+        const wRaw = calculateWidthPower(node.loc, node.count, POWER_CONSTANT_P);
+        const dRaw = calculateLengthPower(node.loc, node.count, POWER_CONSTANT_P);
+
+        const w = Math.max(isNaN(wRaw) ? MIN_LAYOUT_DIMENSION : wRaw, MIN_LAYOUT_DIMENSION);
+        const d = Math.max(isNaN(dRaw) ? MIN_LAYOUT_DIMENSION : dRaw, MIN_LAYOUT_DIMENSION);
+        
+        // Store these for createThreeObjects
+        node.buildingWidth = w; 
+        node.buildingDepth = d;
+
         return { width: w, depth: d };
     }
 }
@@ -311,11 +384,13 @@ function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLev
 
     } else { // It's a File (Building)
         node.loc = node.loc || 0; 
-        const sideLength = node.loc > 0 ? node.loc : MIN_VISIBLE_BUILDING_SIDE;
+        node.count = node.count === undefined ? 1 : Math.max(node.count, Number.EPSILON);
 
-        const buildingWidth = sideLength;
-        const buildingDepth = sideLength;
-        const buildingHeight = sideLength; // For a cube, height is same as sideLength (loc)
+        // Retrieve dimensions calculated in calculateLayout
+        const buildingWidth = Math.max(node.buildingWidth || MIN_VISIBLE_BUILDING_DIMENSION, MIN_VISIBLE_BUILDING_DIMENSION);
+        const buildingDepth = Math.max(node.buildingDepth || MIN_VISIBLE_BUILDING_DIMENSION, MIN_VISIBLE_BUILDING_DIMENSION);
+        const buildingHeight = Math.max(node.buildingHeight || MIN_VISIBLE_BUILDING_DIMENSION, MIN_VISIBLE_BUILDING_DIMENSION);
+
 
         const buildingColor = getHeatColor(node.heat); 
         const buildingMaterial = new THREE.MeshLambertMaterial({ color: buildingColor });
@@ -357,7 +432,7 @@ function updateTooltip() {
             if (intersectedObject.userData && intersectedObject.userData.nodeData) {
                 const nodeData = intersectedObject.userData.nodeData;
                 const type = intersectedObject.userData.type;
-                let locText = nodeData.loc !== undefined ? `${nodeData.loc} Lines (Side Length)` : 'N/A Lines'; // Clarified loc usage
+                let locText = nodeData.loc !== undefined ? `${nodeData.loc} Lines of Code` : 'N/A Lines of Code'; 
                 let countText = (nodeData.count || 0) !== undefined ? `${nodeData.count || 0} Commits` : 'N/A Commits';
                 let fullPathText = nodeData.fullPath;
 
@@ -397,7 +472,7 @@ function initScene(currentNestedStructure) {
     preprocessFileData(currentNestedStructure); 
     
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xabcdef); 
+    // scene.background = new THREE.Color(0xabcdef); 
 
     const aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75, aspect, 5, 60000); 
@@ -488,11 +563,10 @@ async function loadDataAndInitialize() {
     try {
         const response = await fetch('data.csv'); 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} - Could not load data.csv. Make sure it's in the same directory and you are using a web server.`);
+            throw new Error(`HTTP error! status: ${response.status} - Could not load data.csv.`);
         }
         const csvString = await response.text();
         const dynamicallyGeneratedNestedStructure = csvToNestedStructure(csvString);
-        
         initScene(dynamicallyGeneratedNestedStructure);
 
     } catch (error) {
@@ -505,7 +579,7 @@ async function loadDataAndInitialize() {
             canvasElement.outerHTML = `<div style="padding: 20px; color: red; text-align: center; font-family: Arial, sans-serif;">
                                          <h2>Error Initializing Visualization</h2>
                                          <p>${error.message}</p>
-                                         <p>Please check the console for more details and ensure 'data.csv' is correctly formatted and accessible.</p>
+                                         <p>Please check the console for more details and ensure 'data.csv' is correctly formatted and accessible if using external CSV.</p>
                                        </div>`;
         }
     }

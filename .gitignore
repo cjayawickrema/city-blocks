@@ -1,3 +1,4 @@
 /node_modules
 /temp
 /public/data.csv
+.DS_Store
