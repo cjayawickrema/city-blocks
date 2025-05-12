@@ -99,7 +99,7 @@ const MIN_VISIBLE_BUILDING_DIMENSION = 1.0;
 const MIN_LAYOUT_DIMENSION = 5; 
 
 const BASE_FOUNDATION_COLOR = new THREE.Color(0xdddddd); 
-const FOUNDATION_DARKEN_PER_LEVEL = 0.1; 
+const FOUNDATION_DARKEN_PER_LEVEL = 0.08; 
 
 const GROUND_MATERIAL = new THREE.MeshLambertMaterial({ color: 0x50c878 }); 
 
