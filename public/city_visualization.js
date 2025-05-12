@@ -94,10 +94,10 @@ function csvToNestedStructure(csvString) {
 const FOUNDATION_HEIGHT = 5;
 const PADDING = 20; 
 const ITEM_SPACING = 10; 
+// HEIGHT_FACTOR is not used if building dimensions are based on 'loc' for cubes.
 const HEIGHT_FACTOR = 30; 
-const MIN_VISIBLE_BUILDING_HEIGHT = 0.5; 
+const MIN_VISIBLE_BUILDING_SIDE = 2.5; // Min side length for a building cube if loc is 0 or too small
 const MIN_LAYOUT_DIMENSION = 5; 
-const MIN_RENDER_DIMENSION = 2.5; 
 
 const BASE_FOUNDATION_COLOR = new THREE.Color(0xdddddd); 
 const FOUNDATION_DARKEN_PER_LEVEL = 0.05; 
@@ -135,24 +135,22 @@ function preprocessFileData(rootNode) {
 
     allFiles.forEach(file => {
         file.heat = (file.count || 0) / effectiveLargestCount;
+        // 'loc' from CSV is used directly. Ensure it's a number.
+        file.loc = file.loc || 0; 
     });
 }
 
 function getHeatColor(heatInput) {
     const heat = (typeof heatInput === 'number' && !isNaN(heatInput)) ? heatInput : 0;
     const color = new THREE.Color();
-    const blue = new THREE.Color(0x0000ff);    
-    const yellow = new THREE.Color(0xffff00); 
-    const red = new THREE.Color(0xff0000);     
+    const yellow = new THREE.Color(0xffff00); // Heat = 0
+    const red = new THREE.Color(0xff0000);     // Heat = 1
 
-    if (heat <= 0) return blue;
-    if (heat >= 1) return red;
+    if (heat <= 0) return yellow; 
+    if (heat >= 1) return red;   
 
-    if (heat <= 0.5) { 
-        color.lerpColors(blue, yellow, heat * 2);
-    } else { 
-        color.lerpColors(yellow, red, (heat - 0.5) * 2);
-    }
+    color.lerpColors(yellow, red, heat);
+    
     return color;
 }
 
@@ -168,11 +166,16 @@ function calculateLayout(node) {
         childrenToProcess.forEach(child => {
             calculateLayout(child); 
             const isChildDir = child.isDirectory;
-            const childW = isChildDir ? child.calculatedOuterWidth : (child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION);
-            const childD = isChildDir ? child.calculatedOuterDepth : (child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION);
-            
-            if (!isChildDir) { 
-                 child.buildingHeight = Math.max((child.count || 0) * HEIGHT_FACTOR, MIN_VISIBLE_BUILDING_HEIGHT);
+            let childW, childD;
+
+            if (isChildDir) {
+                childW = child.calculatedOuterWidth;
+                childD = child.calculatedOuterDepth;
+            } else { // It's a File
+                child.loc = child.loc || 0; 
+                childW = child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION;
+                childD = child.loc > 0 ? child.loc : MIN_LAYOUT_DIMENSION;
+                child.buildingHeight = child.loc > 0 ? child.loc : MIN_VISIBLE_BUILDING_SIDE; // Height is 'loc' for a cube
             }
             layoutItems.push({ node: child, w: childW, d: childD }); 
         });
@@ -182,8 +185,7 @@ function calculateLayout(node) {
         let currentZ = 0; 
         node.innerWidth = 0;    
         let unplacedItems = [...layoutItems];
-        const placedItemsWithCoords = []; 
-
+        
         let totalAreaOfChildren = 0;
         layoutItems.forEach(item => totalAreaOfChildren += item.w * item.d);
         let targetRowWidth = Math.sqrt(totalAreaOfChildren) * 1.2; 
@@ -226,7 +228,6 @@ function calculateLayout(node) {
             itemsInCurrentRow.forEach(item => {
                 item.node.prelimX = currentXOffsetInRow + item.w / 2; 
                 item.node.prelimZ = currentZ + item.d / 2;      
-                placedItemsWithCoords.push(item.node); 
                 currentXOffsetInRow += item.w + ITEM_SPACING;
             });
 
@@ -252,16 +253,16 @@ function calculateLayout(node) {
         node.foundationHeight = FOUNDATION_HEIGHT;
         return { width: node.calculatedOuterWidth, depth: node.calculatedOuterDepth };
 
-    } else { 
+    } else { // It's a File
+        node.loc = node.loc || 0; 
         if (node.buildingHeight === undefined) { 
-             node.buildingHeight = Math.max((node.count || 0) * HEIGHT_FACTOR, MIN_VISIBLE_BUILDING_HEIGHT);
+             node.buildingHeight = node.loc > 0 ? node.loc : MIN_VISIBLE_BUILDING_SIDE;
         }
         const w = node.loc > 0 ? node.loc : MIN_LAYOUT_DIMENSION;
         const d = node.loc > 0 ? node.loc : MIN_LAYOUT_DIMENSION;
         return { width: w, depth: d };
     }
 }
-
 
 function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLevel) {
     if (!node) return;
@@ -308,16 +309,19 @@ function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLev
             createThreeObjects(childNode, parentThreeGroup, childCenterPos, depthLevel + 1);
         });
 
-    } else { 
-        const buildingWidth = node.loc > 0 ? node.loc : MIN_RENDER_DIMENSION;
-        const buildingDepth = node.loc > 0 ? node.loc : MIN_RENDER_DIMENSION;
-        const buildingHeight = node.buildingHeight; 
+    } else { // It's a File (Building)
+        node.loc = node.loc || 0; 
+        const sideLength = node.loc > 0 ? node.loc : MIN_VISIBLE_BUILDING_SIDE;
+
+        const buildingWidth = sideLength;
+        const buildingDepth = sideLength;
+        const buildingHeight = sideLength; // For a cube, height is same as sideLength (loc)
 
         const buildingColor = getHeatColor(node.heat); 
         const buildingMaterial = new THREE.MeshLambertMaterial({ color: buildingColor });
 
         const buildingGeo = new THREE.BoxGeometry(
-            Math.max(buildingWidth, 0.1),
+            Math.max(buildingWidth, 0.1), 
             Math.max(buildingHeight, 0.1),
             Math.max(buildingDepth, 0.1)
         );
@@ -353,9 +357,10 @@ function updateTooltip() {
             if (intersectedObject.userData && intersectedObject.userData.nodeData) {
                 const nodeData = intersectedObject.userData.nodeData;
                 const type = intersectedObject.userData.type;
-                let locText = nodeData.loc !== undefined ? `${nodeData.loc} Lines` : 'N/A Lines';
+                let locText = nodeData.loc !== undefined ? `${nodeData.loc} Lines (Side Length)` : 'N/A Lines'; // Clarified loc usage
                 let countText = (nodeData.count || 0) !== undefined ? `${nodeData.count || 0} Commits` : 'N/A Commits';
                 let fullPathText = nodeData.fullPath;
+
                 if (type === 'Directory' && !fullPathText && nodeData.name === "root") {
                     fullPathText = "/ (Project Root)";
                 } else if (!fullPathText && nodeData.name) {
@@ -367,7 +372,7 @@ function updateTooltip() {
                     <strong>${nodeData.name || 'Unnamed'}</strong>
                     <ul>
                         <li>${fullPathText}</li>
-                        <li>${locText}</li>
+                        <li>${locText}</li> 
                         <li>${countText}</li>
                         ${type === 'File' && nodeData.heat !== undefined ? `<li>Heat: ${nodeData.heat.toFixed(2)}</li>` : ''}
                         ${type === 'Directory' && intersectedObject.userData.depthLevel !== undefined ? `<li>Depth: ${intersectedObject.userData.depthLevel}</li>` : ''}
@@ -395,7 +400,7 @@ function initScene(currentNestedStructure) {
     scene.background = new THREE.Color(0xabcdef); 
 
     const aspect = window.innerWidth / window.innerHeight;
-    camera = new THREE.PerspectiveCamera(75, aspect, 5, 60000);
+    camera = new THREE.PerspectiveCamera(75, aspect, 5, 60000); 
 
     const canvas = document.getElementById('canvas');
     renderer = new THREE.WebGLRenderer({ 
@@ -410,7 +415,7 @@ function initScene(currentNestedStructure) {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 5; // Match camera's near plane
+    controls.minDistance = 5; 
     controls.maxDistance = 50000; 
     controls.maxPolarAngle = Math.PI / 2 - 0.01; 
 
