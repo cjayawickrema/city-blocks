@@ -475,7 +475,7 @@ function initScene(currentNestedStructure) {
     // scene.background = new THREE.Color(0xabcdef); 
 
     const aspect = window.innerWidth / window.innerHeight;
-    camera = new THREE.PerspectiveCamera(75, aspect, 5, 60000); 
+    camera = new THREE.PerspectiveCamera(75, aspect, 5, 100000); 
 
     const canvas = document.getElementById('canvas');
     renderer = new THREE.WebGLRenderer({ 
