@@ -6,7 +6,8 @@ set -e
 set -o pipefail
 
 # --- Configuration ---
-TEMP_DIR_BASE_NAME="temp"
+TEMP_DIR_NAME="temp" # Fixed temporary directory name
+PUBLIC_SUBDIR_NAME="public" # Subdirectory for the output CSV
 OUTPUT_FILE_NAME="data.csv"
 EXCLUSION_FILE_NAME=".stat_exclude" # Name of the exclusion file
 
@@ -14,6 +15,7 @@ EXCLUSION_FILE_NAME=".stat_exclude" # Name of the exclusion file
 SCRIPT_CWD=""
 TEMP_DIR_PATH=""
 INITIAL_PWD=""
+OUTPUT_DIR_PATH="" # Will store the full path to the public subdirectory
 
 # --- Functions ---
 cleanup() {
@@ -25,38 +27,65 @@ cleanup() {
       cd "$INITIAL_PWD" || echo "Warning: Failed to cd back to $INITIAL_PWD during cleanup."
     fi
 
+    # Use the absolute path for removal to be safe
     if [ -d "$TEMP_DIR_PATH" ]; then
       echo "Removing temporary directory: $TEMP_DIR_PATH"
       rm -rf "$TEMP_DIR_PATH"
     else
+      # This might occur if the directory wasn't created or already removed
       echo "Temporary directory '$TEMP_DIR_PATH' not found or already removed."
+    fi
+    # Remove the temporary CSV file if it still exists (e.g., if mv failed)
+    # TEMP_CSV_PATH is derived from OUTPUT_FILE_PATH which now includes the public subdir
+    if [ -f "${OUTPUT_DIR_PATH}/${OUTPUT_FILE_NAME}.tmp" ]; then # Check using the full path
+        echo "Removing temporary CSV file: ${OUTPUT_DIR_PATH}/${OUTPUT_FILE_NAME}.tmp"
+        rm -f "${OUTPUT_DIR_PATH}/${OUTPUT_FILE_NAME}.tmp"
     fi
     echo "-------------------"
   )
 }
 
 # --- Main Script ---
-INITIAL_PWD=$(pwd)
+INITIAL_PWD=$(pwd) # Save initial PWD for robust cleanup and exclusion file path
 
 if [ -z "$1" ]; then
   echo "Usage: $0 <git_repo_url>"
-  echo "The script will look for an exclusion file named '$EXCLUSION_FILE_NAME' in the root of the cloned repository."
+  echo "The script will look for an exclusion file named '$EXCLUSION_FILE_NAME' in the directory *where the script is run*."
   echo "Each line in '$EXCLUSION_FILE_NAME' should be a file path glob pattern (e.g., '*.log', 'docs/*')."
   echo "Lines starting with '#' and empty lines will be ignored."
+  echo "Output 'data.csv' will be saved in the '$PUBLIC_SUBDIR_NAME/' subdirectory."
+  echo "Output will only include files with a line count (loc) greater than 0."
   exit 1
 fi
 GIT_REPO_URL="$1"
 
 SCRIPT_CWD="$INITIAL_PWD"
-TEMP_DIR_NAME="${TEMP_DIR_BASE_NAME}" # Unique temp directory name
+# Define the temporary directory path using the fixed name, relative to where the script is run
 TEMP_DIR_PATH="$SCRIPT_CWD/$TEMP_DIR_NAME"
-OUTPUT_FILE_PATH="$SCRIPT_CWD/public/$OUTPUT_FILE_NAME"
+
+# Define the output directory and file paths
+OUTPUT_DIR_PATH="$SCRIPT_CWD/$PUBLIC_SUBDIR_NAME"
+OUTPUT_FILE_PATH="$OUTPUT_DIR_PATH/$OUTPUT_FILE_NAME"
+TEMP_CSV_PATH="${OUTPUT_FILE_PATH}.tmp" # Temporary file for the second pass
+
+# Define the absolute path to the exclusion file (one level up from the temp dir, which is SCRIPT_CWD)
+EXCLUSION_FILE_PATH_ABS="$SCRIPT_CWD/$EXCLUSION_FILE_NAME"
 
 trap cleanup EXIT SIGINT SIGTERM # Setup cleanup routine
+
+# Create the public subdirectory if it doesn't exist
+echo "Ensuring output directory '$OUTPUT_DIR_PATH' exists..."
+mkdir -p "$OUTPUT_DIR_PATH"
 
 echo "Output will be saved to: $OUTPUT_FILE_PATH"
 if [ -f "$OUTPUT_FILE_PATH" ]; then
     echo "INFO: Existing output file '$OUTPUT_FILE_PATH' will be overwritten."
+fi
+
+# Handle potential existing "temp" directory
+if [ -d "$TEMP_DIR_PATH" ]; then
+    echo "Warning: Temporary directory '$TEMP_DIR_PATH' already exists. It will be removed."
+    rm -rf "$TEMP_DIR_PATH"
 fi
 
 echo "Creating temporary directory: $TEMP_DIR_PATH"
@@ -66,69 +95,60 @@ echo "Cloning repository $GIT_REPO_URL into $TEMP_DIR_PATH..."
 git clone --quiet "$GIT_REPO_URL" "$TEMP_DIR_PATH"
 echo "Successfully cloned to $TEMP_DIR_PATH"
 
-# Change to the cloned repository directory to find .stat_exclude and run git commands
+# Change to the cloned repository directory to run git log and wc -l relative to repo root
 cd "$TEMP_DIR_PATH"
 
 # --- Prepare AWK filter program for exclusions ---
-# This AWK program:
-# 1. Reads $EXCLUSION_FILE_NAME (if it exists in the cloned repo root).
-# 2. Converts glob patterns from the exclusion file into regular expressions.
-# 3. Filters the input file paths (from git log) against these regexes.
-# 4. Skips empty lines from input (replaces the previous 'sed /^$/d').
-# Note: The shell variable EXCLUSION_FILE_NAME is embedded into the awk script string.
+# This AWK program now looks for the exclusion file one directory level up.
+# We pass the absolute path to the exclusion file into the awk script.
 AWK_FILTER_PROGRAM='
 BEGIN {
     idx = 0;  # Index for the exclude_regexes array
-    # Get the exclusion filename from the shell variable passed into the awk script string
-    exclusion_file = "'../"$EXCLUSION_FILE_NAME"'"; 
+    # Get the ABSOLUTE path to the exclusion file from the shell variable
+    exclusion_file_abs_path = "'"$EXCLUSION_FILE_PATH_ABS"'"; 
 
-    # Check if the exclusion file exists and is readable in the current directory
+    # Check if the exclusion file exists and is readable using its absolute path
     # system() call returns 0 on success for shell commands
-    # Quoting exclusion_file for system() call to handle potential special characters (though unlikely for ".stat_exclude")
-    if (system("test -f \"" exclusion_file "\" && test -r \"" exclusion_file "\"") == 0) {
-        # Read patterns from the exclusion file
-        while ((getline pattern < exclusion_file) > 0) {
+    if (system("test -f \"" exclusion_file_abs_path "\" && test -r \"" exclusion_file_abs_path "\"") == 0) {
+        # Read patterns from the exclusion file using its absolute path
+        while ((getline pattern < exclusion_file_abs_path) > 0) {
             # Skip empty lines or lines starting with # (comments)
             if (pattern ~ /^[[:space:]]*$/ || pattern ~ /^[[:space:]]*#/) {
                 continue;
             }
             
             # Basic glob to regex conversion:
-            # 1. Escape backslashes (must be done first for other escapes to work correctly)
-            gsub(/\\/, "\\\\", pattern); # \   -> \\ (literal backslash for regex engine)
-            # 2. Escape other regex metacharacters that might appear literally in file paths or globs
-            gsub(/\./, "\\.", pattern);  # .   -> \. (literal dot)
-            gsub(/\+/, "\\+", pattern);  # +   -> \+ (literal plus)
-            gsub(/\$/, "\\$", pattern);  # $   -> \$ (literal dollar)
-            gsub(/\^/, "\\^", pattern);  # ^   -> \^ (literal caret)
-            gsub(/\[/, "\\[", pattern); # [   -> \[ (literal open bracket)
-            gsub(/\]/, "\\]", pattern); # ]   -> \] (literal close bracket)
-            gsub(/\(/, "\\(", pattern); # (   -> \( (literal open parenthesis)
-            gsub(/\)/, "\\)", pattern); # )   -> \) (literal close parenthesis)
-            gsub(/\{/, "\\{", pattern); # {   -> \{ (literal open brace)
-            gsub(/\}/, "\\}", pattern); # }   -> \} (literal close brace)
-            gsub(/\|/, "\\|", pattern); # |   -> \| (literal pipe)
-            # 3. Convert actual glob wildcards to their regex equivalents
-            gsub(/\?/, ".", pattern);      # ?   -> . (matches any single character)
-            gsub(/\*/, ".*", pattern);     # * -> .* (matches any sequence of zero or more characters)
+            gsub(/\\/, "\\\\", pattern); # \   -> \\
+            gsub(/\./, "\\.", pattern);  # .   -> \.
+            gsub(/\+/, "\\+", pattern);  # +   -> \+
+            gsub(/\$/, "\\$", pattern);  # $   -> \$
+            gsub(/\^/, "\\^", pattern);  # ^   -> \^
+            gsub(/\[/, "\\[", pattern); # [   -> \[
+            gsub(/\]/, "\\]", pattern); # ]   -> \]
+            gsub(/\(/, "\\(", pattern); # (   -> \(
+            gsub(/\)/, "\\)", pattern); # )   -> \)
+            gsub(/\{/, "\\{", pattern); # {   -> \{
+            gsub(/\}/, "\\}", pattern); # }   -> \}
+            gsub(/\|/, "\\|", pattern); # |   -> \|
+            gsub(/\?/, ".", pattern);      # ?   -> .
+            gsub(/\*/, ".*", pattern);     # * -> .*
             
-            # Anchor pattern to match the whole line (filepath)
+            # Anchor pattern to match the whole line (filepath relative to repo root)
             exclude_regexes[idx++] = "^" pattern "$";
         }
-        close(exclusion_file); # Close the file after reading
+        close(exclusion_file_abs_path); # Close the file after reading
 
         if (idx > 0) {
-            # Print informational messages to stderr so they don'\''t go into the CSV
-            print "INFO: Loaded " idx " exclusion patterns from '\''" exclusion_file "'\''." > "/dev/stderr";
+            print "INFO: Loaded " idx " exclusion patterns from '\''" exclusion_file_abs_path "'\''." > "/dev/stderr";
         } else {
-            print "INFO: Exclusion file '\''" exclusion_file "'\'' was empty or only contained comments/blank lines. No patterns loaded." > "/dev/stderr";
+            print "INFO: Exclusion file '\''" exclusion_file_abs_path "'\'' was empty or only contained comments/blank lines. No patterns loaded." > "/dev/stderr";
         }
     } else {
-        print "INFO: No exclusion file named '\''" exclusion_file "'\'' found or readable in the repository root. No path exclusions will be applied." > "/dev/stderr";
+        print "INFO: No exclusion file named '\''" exclusion_file_abs_path "'\'' found or readable. No path exclusions will be applied." > "/dev/stderr";
     }
 }
 
-# Process each input line (filepath from git log stdin)
+# Process each input line (filepath from git log stdin, relative to repo root)
 {
     # Skip empty lines or lines consisting only of whitespace
     if ($0 ~ /^[[:space:]]*$/) {
@@ -141,8 +161,6 @@ BEGIN {
         for (j = 0; j < idx; j++) {
             if ($0 ~ exclude_regexes[j]) { # If current filepath matches an exclusion regex
                 is_excluded = 1;
-                # Optional: print excluded path to stderr for debugging
-                # print "DEBUG: Excluding path: '\''" $0 "'\'' (matched by regex: " exclude_regexes[j] ")" > "/dev/stderr";
                 break; # No need to check other patterns for this filepath
             }
         }
@@ -156,8 +174,9 @@ BEGIN {
 }
 ' # End of AWK_FILTER_PROGRAM string
 
-echo "Generating Git stats (this may take a while for large repositories)..."
+echo "Generating Git stats (Pass 1: Including zero LOC files)..."
 # The output redirection '>' to OUTPUT_FILE_PATH happens for the entire compound command { ... }.
+# OUTPUT_FILE_PATH is in the SCRIPT_CWD/public, not the temp dir.
 {
   # Header for the CSV file.
   echo "count,path,loc"
@@ -173,21 +192,42 @@ echo "Generating Git stats (this may take a while for large repositories)..."
   # Process each resulting line (count,path) to get current lines of code (loc)
   while IFS=, read -r commit_count filepath; do
     current_loc=0 # Default LOC to 0
-    if [ -f "$filepath" ]; then # Check if path is an existing regular file
+    # Check if the path points to an existing regular file IN THE CURRENT DIR (repo root).
+    if [ -f "$filepath" ]; then
+      # Get line count; suppress wc errors; awk extracts just the number.
       loc_value=$(wc -l < "$filepath" 2>/dev/null | awk '{print $1}')
-      # Validate that loc_value is indeed a non-empty string of digits
+      
+      # Validate that loc_value is indeed a non-empty string of digits.
       if [[ -n "$loc_value" && "$loc_value" =~ ^[0-9]+$ ]]; then
         current_loc="$loc_value"
       fi
-      # If loc_value is not a number (empty or malformed), current_loc remains 0
+      # If loc_value is not a number (empty or malformed due to wc -l error), current_loc remains 0.
     fi
-    # Output the CSV line: count,path,loc
-    echo "$commit_count,$filepath,$current_loc"
-  done
-} > "$OUTPUT_FILE_PATH"
 
-echo "Git stats saved to $OUTPUT_FILE_PATH"
+    # Write the line regardless of LOC value in this first pass
+    echo "$commit_count,$filepath,$current_loc"
+
+  done
+} > "$OUTPUT_FILE_PATH" # This now points to SCRIPT_CWD/public/data.csv
+
+echo "Git stats first pass saved to $OUTPUT_FILE_PATH"
+
+# --- Second Pass: Filter out zero LOC lines ---
+# This happens in the SCRIPT_CWD using the absolute paths defined earlier.
+echo "Filtering Git stats (Pass 2: Removing zero LOC files)..."
+# Use awk to print the header (NR==1) or lines where the 3rd field (loc), treated numerically, is not 0.
+# Read from the original output file and write to a temporary file.
+awk -F',' 'NR == 1 || $3+0 != 0' "$OUTPUT_FILE_PATH" > "$TEMP_CSV_PATH"
+
+# Replace the original file with the filtered temporary file.
+mv "$TEMP_CSV_PATH" "$OUTPUT_FILE_PATH"
+
+echo "Filtered Git stats saved to $OUTPUT_FILE_PATH"
 echo "Script completed successfully."
 
 # The 'trap cleanup EXIT' will handle the cleanup process automatically.
+# cd back to original directory before exiting (trap will handle deletion)
+if [ "$(pwd)" != "$INITIAL_PWD" ]; then
+    cd "$INITIAL_PWD"
+fi
 exit 0

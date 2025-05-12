@@ -174,26 +174,23 @@ function calculateLayout(node) {
             if (!isChildDir) { 
                  child.buildingHeight = Math.max((child.count || 0) * HEIGHT_FACTOR, MIN_VISIBLE_BUILDING_HEIGHT);
             }
-            layoutItems.push({ node: child, w: childW, d: childD }); // Removed area, direct sort on w/d
+            layoutItems.push({ node: child, w: childW, d: childD }); 
         });
 
-        // Sort items: Primary by decreasing depth (d), secondary by decreasing width (w)
-        // This helps taller items establish row depths, and wider items are considered earlier.
         layoutItems.sort((a, b) => b.d - a.d || b.w - a.w);
 
         let currentZ = 0; 
         node.innerWidth = 0;    
         let unplacedItems = [...layoutItems];
-        const placedItemsWithCoords = []; // To store final relative coords before centering
+        const placedItemsWithCoords = []; 
 
-        // Heuristic for target row width: aiming for roughly square overall layout
         let totalAreaOfChildren = 0;
         layoutItems.forEach(item => totalAreaOfChildren += item.w * item.d);
-        let targetRowWidth = Math.sqrt(totalAreaOfChildren) * 1.2; // Factor for spacing and non-perfect packing
+        let targetRowWidth = Math.sqrt(totalAreaOfChildren) * 1.2; 
         if (layoutItems.length > 0) {
              targetRowWidth = Math.max(targetRowWidth, layoutItems.reduce((maxW, item) => Math.max(maxW, item.w), 0));
         }
-        targetRowWidth = Math.max(targetRowWidth, MIN_LAYOUT_DIMENSION); // Ensure a minimum target width
+        targetRowWidth = Math.max(targetRowWidth, MIN_LAYOUT_DIMENSION); 
 
 
         while (unplacedItems.length > 0) {
@@ -203,39 +200,33 @@ function calculateLayout(node) {
             let remainingForNextPass = [];
 
             for (const item of unplacedItems) {
-                if (itemsInCurrentRow.length === 0) { // Always add the first item to an empty row
+                if (itemsInCurrentRow.length === 0) { 
                     itemsInCurrentRow.push(item);
                     currentRowAccumulatedWidth = item.w;
                     currentRowMaxDepth = item.d;
                 } else if (currentRowAccumulatedWidth + ITEM_SPACING + item.w <= targetRowWidth) {
-                    // If item fits within the target row width, add it
                     itemsInCurrentRow.push(item);
                     currentRowAccumulatedWidth += ITEM_SPACING + item.w;
                     currentRowMaxDepth = Math.max(currentRowMaxDepth, item.d);
                 } else {
-                    remainingForNextPass.push(item); // Does not fit, save for the next row
+                    remainingForNextPass.push(item); 
                 }
             }
             
-            // If no items could be placed in the row (e.g., targetRowWidth too small for the widest item)
-            // This scenario means the targetRowWidth was too restrictive.
             if (itemsInCurrentRow.length === 0 && remainingForNextPass.length > 0) { 
-                // Force place the first (largest by sort order) remaining item to start a new row
-                const nextItem = remainingForNextPass.shift(); // Take the first item from the remaining list
+                const nextItem = remainingForNextPass.shift(); 
                 itemsInCurrentRow.push(nextItem);
                 currentRowAccumulatedWidth = nextItem.w;
                 currentRowMaxDepth = nextItem.d;
             }
             
-            if (itemsInCurrentRow.length === 0) break; // No items left to place or cannot place any more.
+            if (itemsInCurrentRow.length === 0) break; 
 
-            // Position items within the finalized current row
             let currentXOffsetInRow = 0;
             itemsInCurrentRow.forEach(item => {
-                // Store prelimX/Z relative to the top-left of the packed area
                 item.node.prelimX = currentXOffsetInRow + item.w / 2; 
                 item.node.prelimZ = currentZ + item.d / 2;      
-                placedItemsWithCoords.push(item.node); // Keep track of nodes that have prelim coords
+                placedItemsWithCoords.push(item.node); 
                 currentXOffsetInRow += item.w + ITEM_SPACING;
             });
 
@@ -246,16 +237,12 @@ function calculateLayout(node) {
 
         node.innerDepth = (currentZ > 0) ? currentZ - ITEM_SPACING : 0; 
 
-        // Center all placed items relative to the parent's calculated inner dimensions
-        // Iterate over all original children to ensure all get renderOffsets
         childrenToProcess.forEach(childNode => { 
-            // If a child was part of layoutItems and got prelimX/Z, use it
             if (childNode.prelimX !== undefined && childNode.prelimZ !== undefined) {
                 childNode.renderOffsetX = childNode.prelimX - node.innerWidth / 2;
                 childNode.renderOffsetZ = childNode.prelimZ - node.innerDepth / 2;
             } else { 
-                // Fallback for any child not processed (should be rare if logic is complete)
-                childNode.renderOffsetX = 0 - node.innerWidth / 2; // Place at corner or hide
+                childNode.renderOffsetX = 0 - node.innerWidth / 2; 
                 childNode.renderOffsetZ = 0 - node.innerDepth / 2;
             }
         });
@@ -310,8 +297,8 @@ function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLev
         
         const childrenToDraw = [...(node.childFiles || []), ...(node.childDirectories || [])];
         childrenToDraw.forEach(childNode => {
-            const offsetX = childNode.renderOffsetX === undefined ? (-node.innerWidth/2 - (childNode.w || MIN_LAYOUT_DIMENSION)) : childNode.renderOffsetX; // Fallback
-            const offsetZ = childNode.renderOffsetZ === undefined ? (-node.innerDepth/2 - (childNode.d || MIN_LAYOUT_DIMENSION)) : childNode.renderOffsetZ; // Fallback
+            const offsetX = childNode.renderOffsetX === undefined ? (-node.innerWidth/2 - (childNode.w || MIN_LAYOUT_DIMENSION)) : childNode.renderOffsetX; 
+            const offsetZ = childNode.renderOffsetZ === undefined ? (-node.innerDepth/2 - (childNode.d || MIN_LAYOUT_DIMENSION)) : childNode.renderOffsetZ; 
 
             const childCenterPos = new THREE.Vector3(
                 childrenOriginX + offsetX,
@@ -408,7 +395,7 @@ function initScene(currentNestedStructure) {
     scene.background = new THREE.Color(0xabcdef); 
 
     const aspect = window.innerWidth / window.innerHeight;
-    camera = new THREE.PerspectiveCamera(75, aspect, 1, 60000); 
+    camera = new THREE.PerspectiveCamera(75, aspect, 5, 60000);
 
     const canvas = document.getElementById('canvas');
     renderer = new THREE.WebGLRenderer({ 
@@ -423,7 +410,7 @@ function initScene(currentNestedStructure) {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 1; 
+    controls.minDistance = 5; // Match camera's near plane
     controls.maxDistance = 50000; 
     controls.maxPolarAngle = Math.PI / 2 - 0.01; 
 

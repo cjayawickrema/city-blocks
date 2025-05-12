@@ -3,5 +3,7 @@
 *.json
 *.md
 *__tests__/*
+*__tests/*
+*__mocks__/*
 *.gif
 *yarn.lock
