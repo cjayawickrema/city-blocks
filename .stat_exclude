@@ -2,8 +2,9 @@
 *.log
 *.json
 *.md
-*__tests__/*
+*__tests**/*
 *__tests/*
 *__mocks__/*
 *.gif
 *yarn.lock
+config/*
