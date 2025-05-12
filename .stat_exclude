@@ -4,3 +4,4 @@
 *.md
 *__tests__/*
 *.gif
+*yarn.lock

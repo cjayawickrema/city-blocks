@@ -3,21 +3,21 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 function csvToNestedStructure(csvString) {
     const lines = csvString.trim().split('\n');
-    const header = lines.shift(); 
+    const header = lines.shift();
 
     const root = {
         name: "root",
-        fullPath: "", 
+        fullPath: "",
         childDirectories: [],
         childFiles: [],
-        loc: 0, 
-        count: 0 
+        loc: 0,
+        count: 0
     };
 
     lines.forEach(line => {
         const values = line.split(',');
         if (values.length < 3) {
-            return; 
+            return;
         }
 
         const countStr = values[0];
@@ -36,7 +36,7 @@ function csvToNestedStructure(csvString) {
         }
 
         const parts = path.split('/');
-        const fileName = parts.pop(); 
+        const fileName = parts.pop();
 
         let currentDirectory = root;
         let currentPathSegments = [];
@@ -50,18 +50,18 @@ function csvToNestedStructure(csvString) {
                     fullPath: currentPathSegments.join('/'),
                     childDirectories: [],
                     childFiles: [],
-                    loc: 0, 
-                    count: 0 
+                    loc: 0,
+                    count: 0
                 };
                 currentDirectory.childDirectories.push(directory);
             }
             currentDirectory = directory;
         });
 
-        if (fileName) { 
+        if (fileName) {
             currentDirectory.childFiles.push({
                 name: fileName,
-                fullPath: path, 
+                fullPath: path,
                 loc: loc,
                 count: count
             });
@@ -78,7 +78,7 @@ function csvToNestedStructure(csvString) {
         });
 
         directoryNode.childDirectories.forEach(childDir => {
-            calculateDirectoryStats(childDir); 
+            calculateDirectoryStats(childDir);
             totalLoc += childDir.loc;
             totalCount += childDir.count;
         });
@@ -87,14 +87,14 @@ function csvToNestedStructure(csvString) {
         directoryNode.count = totalCount;
     }
 
-    calculateDirectoryStats(root); 
+    calculateDirectoryStats(root);
     return root;
 }
 
 const FOUNDATION_HEIGHT = 5;
 const PADDING = 20; 
 const ITEM_SPACING = 10; 
-const HEIGHT_FACTOR = 5; 
+const HEIGHT_FACTOR = 30; 
 const MIN_VISIBLE_BUILDING_HEIGHT = 0.5; 
 const MIN_LAYOUT_DIMENSION = 5; 
 const MIN_RENDER_DIMENSION = 2.5; 
@@ -103,7 +103,6 @@ const BASE_FOUNDATION_COLOR = new THREE.Color(0xdddddd);
 const FOUNDATION_DARKEN_PER_LEVEL = 0.05; 
 
 const GROUND_MATERIAL = new THREE.MeshLambertMaterial({ color: 0x50c878 }); 
-const PACKING_ASPECT_RATIO_TARGET = 2.5; 
 
 let scene, camera, renderer, controls;
 let raycaster, mouse, tooltipElement, intersectedObject = null;
@@ -175,73 +174,89 @@ function calculateLayout(node) {
             if (!isChildDir) { 
                  child.buildingHeight = Math.max((child.count || 0) * HEIGHT_FACTOR, MIN_VISIBLE_BUILDING_HEIGHT);
             }
-            layoutItems.push({ node: child, w: childW, d: childD, area: childW * childD });
+            layoutItems.push({ node: child, w: childW, d: childD }); // Removed area, direct sort on w/d
         });
 
-        layoutItems.sort((a, b) => b.area - a.area || Math.max(b.w, b.d) - Math.max(a.w, a.d));
+        // Sort items: Primary by decreasing depth (d), secondary by decreasing width (w)
+        // This helps taller items establish row depths, and wider items are considered earlier.
+        layoutItems.sort((a, b) => b.d - a.d || b.w - a.w);
 
-        let currentZOffset = 0; 
+        let currentZ = 0; 
         node.innerWidth = 0;    
-        let remainingItems = [...layoutItems];
+        let unplacedItems = [...layoutItems];
+        const placedItemsWithCoords = []; // To store final relative coords before centering
 
-        while (remainingItems.length > 0) {
+        // Heuristic for target row width: aiming for roughly square overall layout
+        let totalAreaOfChildren = 0;
+        layoutItems.forEach(item => totalAreaOfChildren += item.w * item.d);
+        let targetRowWidth = Math.sqrt(totalAreaOfChildren) * 1.2; // Factor for spacing and non-perfect packing
+        if (layoutItems.length > 0) {
+             targetRowWidth = Math.max(targetRowWidth, layoutItems.reduce((maxW, item) => Math.max(maxW, item.w), 0));
+        }
+        targetRowWidth = Math.max(targetRowWidth, MIN_LAYOUT_DIMENSION); // Ensure a minimum target width
+
+
+        while (unplacedItems.length > 0) {
             let itemsInCurrentRow = [];
-            let rowWidth = 0;            
-            let rowMaxActualDepth = 0;   
-            let availableRowWidth;       
+            let currentRowAccumulatedWidth = 0; 
+            let currentRowMaxDepth = 0;   
+            let remainingForNextPass = [];
 
-            if (remainingItems.length > 0) {
-                 const firstItem = remainingItems[0];
-                 availableRowWidth = firstItem.w; 
-            } else { 
-                break;
-            }
-            
-            let tempNotFitting = []; 
-            for (let i = 0; i < remainingItems.length; i++) {
-                const item = remainingItems[i];
-                if (itemsInCurrentRow.length === 0) { 
+            for (const item of unplacedItems) {
+                if (itemsInCurrentRow.length === 0) { // Always add the first item to an empty row
                     itemsInCurrentRow.push(item);
-                    rowWidth = item.w;
-                    rowMaxActualDepth = Math.max(rowMaxActualDepth, item.d);
-                } else if (rowWidth + ITEM_SPACING + item.w <= availableRowWidth * PACKING_ASPECT_RATIO_TARGET || itemsInCurrentRow.length < 2 ) { 
+                    currentRowAccumulatedWidth = item.w;
+                    currentRowMaxDepth = item.d;
+                } else if (currentRowAccumulatedWidth + ITEM_SPACING + item.w <= targetRowWidth) {
+                    // If item fits within the target row width, add it
                     itemsInCurrentRow.push(item);
-                    rowWidth += ITEM_SPACING + item.w;
-                    rowMaxActualDepth = Math.max(rowMaxActualDepth, item.d);
+                    currentRowAccumulatedWidth += ITEM_SPACING + item.w;
+                    currentRowMaxDepth = Math.max(currentRowMaxDepth, item.d);
                 } else {
-                    tempNotFitting.push(item); 
+                    remainingForNextPass.push(item); // Does not fit, save for the next row
                 }
             }
             
-            if (itemsInCurrentRow.length === 0 && remainingItems.length > 0) { 
-                const fallbackItem = remainingItems.shift(); 
-                itemsInCurrentRow.push(fallbackItem);
-                rowWidth = fallbackItem.w;
-                rowMaxActualDepth = Math.max(rowMaxActualDepth, fallbackItem.d);
-                tempNotFitting = remainingItems; 
+            // If no items could be placed in the row (e.g., targetRowWidth too small for the widest item)
+            // This scenario means the targetRowWidth was too restrictive.
+            if (itemsInCurrentRow.length === 0 && remainingForNextPass.length > 0) { 
+                // Force place the first (largest by sort order) remaining item to start a new row
+                const nextItem = remainingForNextPass.shift(); // Take the first item from the remaining list
+                itemsInCurrentRow.push(nextItem);
+                currentRowAccumulatedWidth = nextItem.w;
+                currentRowMaxDepth = nextItem.d;
             }
+            
+            if (itemsInCurrentRow.length === 0) break; // No items left to place or cannot place any more.
 
+            // Position items within the finalized current row
             let currentXOffsetInRow = 0;
             itemsInCurrentRow.forEach(item => {
+                // Store prelimX/Z relative to the top-left of the packed area
                 item.node.prelimX = currentXOffsetInRow + item.w / 2; 
-                item.node.prelimZ = currentZOffset + item.d / 2;      
+                item.node.prelimZ = currentZ + item.d / 2;      
+                placedItemsWithCoords.push(item.node); // Keep track of nodes that have prelim coords
                 currentXOffsetInRow += item.w + ITEM_SPACING;
             });
 
-            node.innerWidth = Math.max(node.innerWidth, rowWidth); 
-            currentZOffset += rowMaxActualDepth + ITEM_SPACING;   
-            remainingItems = tempNotFitting; 
+            node.innerWidth = Math.max(node.innerWidth, currentRowAccumulatedWidth); 
+            currentZ += currentRowMaxDepth + ITEM_SPACING;   
+            unplacedItems = remainingForNextPass; 
         }
 
-        node.innerDepth = (currentZOffset > 0) ? currentZOffset - ITEM_SPACING : 0; 
+        node.innerDepth = (currentZ > 0) ? currentZ - ITEM_SPACING : 0; 
 
-        layoutItems.forEach(item => { 
-            if (item.node.prelimX !== undefined) { 
-                item.node.renderOffsetX = item.node.prelimX - node.innerWidth / 2;
-                item.node.renderOffsetZ = item.node.prelimZ - node.innerDepth / 2;
+        // Center all placed items relative to the parent's calculated inner dimensions
+        // Iterate over all original children to ensure all get renderOffsets
+        childrenToProcess.forEach(childNode => { 
+            // If a child was part of layoutItems and got prelimX/Z, use it
+            if (childNode.prelimX !== undefined && childNode.prelimZ !== undefined) {
+                childNode.renderOffsetX = childNode.prelimX - node.innerWidth / 2;
+                childNode.renderOffsetZ = childNode.prelimZ - node.innerDepth / 2;
             } else { 
-                item.node.renderOffsetX = 0;
-                item.node.renderOffsetZ = 0;
+                // Fallback for any child not processed (should be rare if logic is complete)
+                childNode.renderOffsetX = 0 - node.innerWidth / 2; // Place at corner or hide
+                childNode.renderOffsetZ = 0 - node.innerDepth / 2;
             }
         });
         
@@ -259,6 +274,7 @@ function calculateLayout(node) {
         return { width: w, depth: d };
     }
 }
+
 
 function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLevel) {
     if (!node) return;
@@ -294,8 +310,8 @@ function createThreeObjects(node, parentThreeGroup, baseCenterPosition, depthLev
         
         const childrenToDraw = [...(node.childFiles || []), ...(node.childDirectories || [])];
         childrenToDraw.forEach(childNode => {
-            const offsetX = childNode.renderOffsetX === undefined ? 0 : childNode.renderOffsetX;
-            const offsetZ = childNode.renderOffsetZ === undefined ? 0 : childNode.renderOffsetZ;
+            const offsetX = childNode.renderOffsetX === undefined ? (-node.innerWidth/2 - (childNode.w || MIN_LAYOUT_DIMENSION)) : childNode.renderOffsetX; // Fallback
+            const offsetZ = childNode.renderOffsetZ === undefined ? (-node.innerDepth/2 - (childNode.d || MIN_LAYOUT_DIMENSION)) : childNode.renderOffsetZ; // Fallback
 
             const childCenterPos = new THREE.Vector3(
                 childrenOriginX + offsetX,
@@ -392,10 +408,14 @@ function initScene(currentNestedStructure) {
     scene.background = new THREE.Color(0xabcdef); 
 
     const aspect = window.innerWidth / window.innerHeight;
-    camera = new THREE.PerspectiveCamera(75, aspect, 1, 50000); 
+    camera = new THREE.PerspectiveCamera(75, aspect, 1, 60000); 
 
     const canvas = document.getElementById('canvas');
-    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
+    renderer = new THREE.WebGLRenderer({ 
+        antialias: true, 
+        canvas: canvas,
+        logarithmicDepthBuffer: true 
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true; 
@@ -403,8 +423,8 @@ function initScene(currentNestedStructure) {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 0.1; // Zoom in closer
-    controls.maxDistance = 50000; // Zoom out further
+    controls.minDistance = 1; 
+    controls.maxDistance = 50000; 
     controls.maxPolarAngle = Math.PI / 2 - 0.01; 
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -415,7 +435,7 @@ function initScene(currentNestedStructure) {
     directionalLight.shadow.mapSize.width = 2048; 
     directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.near = 10;
-    directionalLight.shadow.camera.far = 1000;
+    directionalLight.shadow.camera.far = 1000; 
     directionalLight.shadow.camera.left = -500;
     directionalLight.shadow.camera.right = 500;
     directionalLight.shadow.camera.top = 500;
