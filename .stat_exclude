@@ -2,3 +2,5 @@
 *.log
 *.json
 *.md
+*__tests__/*
+*.gif
